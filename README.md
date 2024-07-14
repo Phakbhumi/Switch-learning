@@ -1,5 +1,5 @@
 # switch_learning
-#### An application requested by my friend - The main features are:
+#### An application requested by my friend
 
 This application contains a collection of topics
 In each topic, you can create multiple key-value pair  
