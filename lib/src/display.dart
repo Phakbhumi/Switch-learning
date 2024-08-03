@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:switch_learning/src/components/appbar.dart';
 import 'package:switch_learning/src/components/missing_data.dart';
+import 'package:switch_learning/src/components/dialogue_handler.dart';
 import 'package:switch_learning/src/theme/theme.dart';
 import 'package:switch_learning/src/theme/theme_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -127,13 +128,17 @@ class _DisplayPageState extends State<DisplayPage> {
             String newKeyWord = addedValue[0];
             String newRelevance = addedValue[1];
             if (newKeyWord == '') {
-              await errorDialog("Keyword can't be empty!");
+              if (context.mounted) {
+                await DialogueHandler().errorDialog(context, "Keyword can't be empty!");
+              }
               isDoingSomething = false;
               return;
             }
             for (String keyWords in keyWord) {
               if (newKeyWord == keyWords) {
-                await errorDialog("The keyword already exists!");
+                if (context.mounted) {
+                  await DialogueHandler().errorDialog(context, "The keyword already exists!");
+                }
                 isDoingSomething = false;
                 return;
               }
@@ -161,13 +166,17 @@ class _DisplayPageState extends State<DisplayPage> {
     String newKeyWord = editedValue[0];
     String newRelevance = editedValue[1];
     if (newKeyWord == '') {
-      await errorDialog("Keyword can't be empty!");
+      if (mounted) {
+        await DialogueHandler().errorDialog(context, "Keyword can't be empty!");
+      }
       isDoingSomething = false;
       return;
     }
     for (String keyWords in keyWord) {
       if (newKeyWord == keyWords) {
-        await errorDialog("Keyword already exists!");
+        if (mounted) {
+          await DialogueHandler().errorDialog(context, "The keyword already exists!");
+        }
         isDoingSomething = false;
         return;
       }
@@ -184,7 +193,10 @@ class _DisplayPageState extends State<DisplayPage> {
   deleteData(int index) async {
     if (isDoingSomething == true) return;
     isDoingSomething = true;
-    bool isDelete = await deleteDialog(keyWord[index]) ?? false;
+    bool isDelete = false;
+    if (mounted) {
+      isDelete = await DialogueHandler().deleteDialog(context, keyWord[index]) ?? false;
+    }
     if (isDelete == false) {
       isDoingSomething = false;
       return;
@@ -243,43 +255,6 @@ class _DisplayPageState extends State<DisplayPage> {
                 Navigator.of(context).pop([keyController.text, relevanceController.text]);
               },
               child: const Text("Submit"),
-            ),
-          ],
-        ),
-      );
-
-  Future<void> errorDialog(String error) => showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(error),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text("Ok"),
-            ),
-          ],
-        ),
-      );
-
-  Future<bool?> deleteDialog(String currentKeyword) => showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text("Are you sure you want to delete $currentKeyword?"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-              child: const Text("Yes, delete it"),
-            ),
-            const SizedBox(height: 20),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-              child: const Text("No, do not delete"),
             ),
           ],
         ),

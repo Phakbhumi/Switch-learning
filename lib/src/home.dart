@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:switch_learning/src/components/dialogue_handler.dart';
 import 'package:switch_learning/src/theme/theme_provider.dart';
 import 'package:switch_learning/src/components/appbar.dart';
 import 'package:switch_learning/src/components/missing_data.dart';
@@ -161,23 +162,31 @@ class _HomePageState extends State<HomePage> {
             return;
           }
           if (addedTopic == "") {
-            await errorDialog("Topic can't be empty!");
+            if (context.mounted) {
+              await DialogueHandler().errorDialog(context, "Topic can't be empty!");
+            }
             isDoingSomething = false;
             return;
           }
           if (addedTopic == masterKey) {
-            await errorDialog("Forbidden topic name (Equal to master key)");
+            if (context.mounted) {
+              await DialogueHandler().errorDialog(context, "Forbidden topic name (Equal to master key)");
+            }
             isDoingSomething = false;
             return;
           }
           if (addedTopic.contains('_')) {
-            await errorDialog("Forbidden topic name (Contains underscore)");
+            if (context.mounted) {
+              await DialogueHandler().errorDialog(context, "Forbidden topic name (Contains underscore)");
+            }
             isDoingSomething = false;
             return;
           }
           for (String existingTopic in topic) {
             if (addedTopic == existingTopic) {
-              await errorDialog("Topic already exists!");
+              if (context.mounted) {
+                await DialogueHandler().errorDialog(context, "Topic already exists!");
+              }
               isDoingSomething = false;
               return;
             }
@@ -206,23 +215,31 @@ class _HomePageState extends State<HomePage> {
       return;
     }
     if (newTopic == "") {
-      await errorDialog("Topic can't be empty!");
+      if (mounted) {
+        await DialogueHandler().errorDialog(context, "Topic can't be empty!");
+      }
       isDoingSomething = false;
       return;
     }
     if (newTopic == masterKey) {
-      await errorDialog("Forbidden topic name (Equal to master key)");
+      if (mounted) {
+        await DialogueHandler().errorDialog(context, "Forbidden topic name (Equal to master key)");
+      }
       isDoingSomething = false;
       return;
     }
     if (newTopic.contains('_')) {
-      await errorDialog("Forbidden topic name (Contains underscore)");
+      if (mounted) {
+        await DialogueHandler().errorDialog(context, "Forbidden topic name (Contains underscore)");
+      }
       isDoingSomething = false;
       return;
     }
     for (String existingTopic in topic) {
       if (newTopic == existingTopic) {
-        await errorDialog("Topic already exists!");
+        if (mounted) {
+          await DialogueHandler().errorDialog(context, "Topic already exists!");
+        }
         isDoingSomething = false;
         return;
       }
@@ -242,8 +259,11 @@ class _HomePageState extends State<HomePage> {
       return;
     }
     isDoingSomething = true;
-    bool isDetete = await deleteDialog(currentTopic) ?? false;
-    if (isDetete == false) {
+    bool isDelete = false;
+    if (mounted) {
+      isDelete = await DialogueHandler().deleteDialog(context, currentTopic) ?? false;
+    }
+    if (isDelete == false) {
       isDoingSomething = false;
       return;
     }
@@ -281,43 +301,6 @@ class _HomePageState extends State<HomePage> {
                 Navigator.of(context).pop(controller.text);
               },
               child: const Text("Submit"),
-            ),
-          ],
-        ),
-      );
-
-  Future<void> errorDialog(String error) => showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(error),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text("Ok"),
-            ),
-          ],
-        ),
-      );
-
-  Future<bool?> deleteDialog(String currentTopic) => showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text("Are you sure you want to delete $currentTopic?"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-              child: const Text("Yes, delete it"),
-            ),
-            const SizedBox(height: 20),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-              child: const Text("No, do not delete"),
             ),
           ],
         ),
