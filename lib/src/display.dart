@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:switch_learning/components/appbar.dart';
-import 'package:switch_learning/components/missing_data.dart';
-import 'package:switch_learning/theme/theme.dart';
-import 'package:switch_learning/theme/theme_provider.dart';
+import 'package:switch_learning/src/components/appbar.dart';
+import 'package:switch_learning/src/components/missing_data.dart';
+import 'package:switch_learning/src/theme/theme.dart';
+import 'package:switch_learning/src/theme/theme_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DisplayPage extends StatefulWidget {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:switch_learning/theme/theme.dart';
+import 'package:switch_learning/src/theme/theme.dart';
 
 class ThemeProvider with ChangeNotifier {
   ThemeData _themeData = lightMode;

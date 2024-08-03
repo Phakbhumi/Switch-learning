@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:switch_learning/theme/theme.dart';
-import 'package:switch_learning/theme/theme_provider.dart';
+import 'package:switch_learning/src/theme/theme.dart';
+import 'package:switch_learning/src/theme/theme_provider.dart';
 
 class MainAppBar extends StatefulWidget implements PreferredSizeWidget {
   const MainAppBar(this.title, {super.key});
