@@ -50,7 +50,7 @@ class HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const MainAppBar("Home"),
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: Theme.of(context).colorScheme.background,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.only(
@@ -250,7 +250,6 @@ class TopicList extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10.0),
       child: Card(
-        color: Theme.of(context).colorScheme.surfaceTint,
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: Row(

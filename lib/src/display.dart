@@ -62,7 +62,7 @@ class _DisplayPageState extends State<DisplayPage> {
     return SafeArea(
       child: Scaffold(
         appBar: MainAppBar(widget.mainKey),
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Theme.of(context).colorScheme.background,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -222,7 +222,7 @@ class _DisplayPageState extends State<DisplayPage> {
   Future<List<String>?> openDialog(String title) => showDialog<List<String>>(
         context: context,
         builder: (context) => AlertDialog(
-          backgroundColor: Theme.of(context).colorScheme.surface,
+          backgroundColor: Theme.of(context).colorScheme.background,
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
