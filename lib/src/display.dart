@@ -157,7 +157,7 @@ class _DisplayPageState extends State<DisplayPage> {
     );
   }
 
-  editData(int index) async {
+  void editData(int index) async {
     if (isDoingSomething == true) return;
     isDoingSomething = true;
     keyController.text = keyWord[index];
@@ -190,7 +190,7 @@ class _DisplayPageState extends State<DisplayPage> {
     isDoingSomething = false;
   }
 
-  deleteData(int index) async {
+  void deleteData(int index) async {
     if (isDoingSomething == true) return;
     isDoingSomething = true;
     bool isDelete = false;
@@ -222,6 +222,7 @@ class _DisplayPageState extends State<DisplayPage> {
   Future<List<String>?> openDialog(String title) => showDialog<List<String>>(
         context: context,
         builder: (context) => AlertDialog(
+          backgroundColor: Theme.of(context).colorScheme.surface,
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

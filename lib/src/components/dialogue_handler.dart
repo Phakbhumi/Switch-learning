@@ -5,6 +5,7 @@ class DialogueHandler {
         context: context,
         builder: (context) => AlertDialog(
           title: Text(errorMessage),
+          backgroundColor: Theme.of(context).colorScheme.surface,
           actions: [
             TextButton(
               onPressed: () {
@@ -20,6 +21,7 @@ class DialogueHandler {
         context: context,
         builder: (context) => AlertDialog(
           title: Text("Are you sure you want to delete $currentTopic?"),
+          backgroundColor: Theme.of(context).colorScheme.surface,
           actions: [
             TextButton(
               onPressed: () {

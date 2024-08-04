@@ -79,6 +79,7 @@ class HomePageState extends State<HomePage> {
                               child: Padding(
                                 padding: const EdgeInsets.only(bottom: 10.0),
                                 child: Card(
+                                  color: Theme.of(context).colorScheme.surfaceTint,
                                   child: Padding(
                                     padding: const EdgeInsets.all(10.0),
                                     child: Row(
@@ -182,7 +183,7 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  editData(int index, String currentTopic) async {
+  void editData(int index, String currentTopic) async {
     if (isDoingSomething == true) return;
     isDoingSomething = true;
     controller.text = currentTopic;
@@ -205,7 +206,7 @@ class HomePageState extends State<HomePage> {
     isDoingSomething = false;
   }
 
-  deleteData(int index, String currentTopic) async {
+  void deleteData(int index, String currentTopic) async {
     if (isDoingSomething == true) {
       return;
     }
@@ -230,6 +231,7 @@ class HomePageState extends State<HomePage> {
   Future<String?> openDialog(String title, String hint) => showDialog<String>(
         context: context,
         builder: (context) => AlertDialog(
+          backgroundColor: Theme.of(context).colorScheme.surface,
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
