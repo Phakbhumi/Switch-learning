@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:switch_learning/src/components/dialogue_handler.dart';
+import 'package:switch_learning/src/data/validator.dart';
 import 'package:switch_learning/src/theme/theme_provider.dart';
 import 'package:switch_learning/src/components/appbar.dart';
 import 'package:switch_learning/src/components/missing_data.dart';
@@ -11,10 +12,10 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePage> createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
   String masterKey = "Master123456";
   List<String> topic = [];
   late TextEditingController controller;
@@ -22,7 +23,7 @@ class _HomePageState extends State<HomePage> {
   String prefix = "";
   bool isDoingSomething = false;
 
-  void initVal() async {
+  Future<void> initVal() async {
     prefs = await SharedPreferences.getInstance();
     setState(() {
       topic = prefs.getStringList(masterKey) ?? [];
@@ -49,7 +50,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const MainAppBar("Home"),
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.only(
@@ -161,42 +162,19 @@ class _HomePageState extends State<HomePage> {
             isDoingSomething = false;
             return;
           }
-          if (addedTopic == "") {
+          ValidationResult shouldAdd = await Validator().shouldModifyTopic(addedTopic, masterKey, topic);
+          if (shouldAdd.verdict == false) {
             if (context.mounted) {
-              await DialogueHandler().errorDialog(context, "Topic can't be empty!");
+              await DialogueHandler().errorDialog(context, shouldAdd.errorMessage);
             }
-            isDoingSomething = false;
-            return;
+          } else {
+            await prefs.setStringList("${addedTopic}_1", []);
+            await prefs.setStringList("${addedTopic}_2", []);
+            setState(() {
+              topic.insert(topic.length, addedTopic);
+            });
+            await prefs.setStringList(masterKey, topic);
           }
-          if (addedTopic == masterKey) {
-            if (context.mounted) {
-              await DialogueHandler().errorDialog(context, "Forbidden topic name (Equal to master key)");
-            }
-            isDoingSomething = false;
-            return;
-          }
-          if (addedTopic.contains('_')) {
-            if (context.mounted) {
-              await DialogueHandler().errorDialog(context, "Forbidden topic name (Contains underscore)");
-            }
-            isDoingSomething = false;
-            return;
-          }
-          for (String existingTopic in topic) {
-            if (addedTopic == existingTopic) {
-              if (context.mounted) {
-                await DialogueHandler().errorDialog(context, "Topic already exists!");
-              }
-              isDoingSomething = false;
-              return;
-            }
-          }
-          await prefs.setStringList("${addedTopic}_1", []);
-          await prefs.setStringList("${addedTopic}_2", []);
-          setState(() {
-            topic.insert(topic.length, addedTopic);
-          });
-          await prefs.setStringList(masterKey, topic);
           isDoingSomething = false;
         },
         child: const Icon(Icons.add),
@@ -210,47 +188,20 @@ class _HomePageState extends State<HomePage> {
     controller.text = currentTopic;
     String? newTopic = await openDialog("Edit Topic", "Add your topic");
     controller.text = "";
-    if (newTopic == null) {
-      isDoingSomething = false;
-      return;
-    }
-    if (newTopic == "") {
+    ValidationResult shouldModify = await Validator().shouldModifyTopic(newTopic, masterKey, topic);
+    if (shouldModify.verdict == false) {
       if (mounted) {
-        await DialogueHandler().errorDialog(context, "Topic can't be empty!");
+        await DialogueHandler().errorDialog(context, shouldModify.errorMessage);
       }
-      isDoingSomething = false;
-      return;
+    } else {
+      List<String> lists = prefs.getStringList(currentTopic) ?? [];
+      await prefs.setStringList(newTopic!, lists);
+      await prefs.remove(currentTopic);
+      setState(() {
+        topic[index] = newTopic;
+      });
+      await prefs.setStringList(masterKey, topic);
     }
-    if (newTopic == masterKey) {
-      if (mounted) {
-        await DialogueHandler().errorDialog(context, "Forbidden topic name (Equal to master key)");
-      }
-      isDoingSomething = false;
-      return;
-    }
-    if (newTopic.contains('_')) {
-      if (mounted) {
-        await DialogueHandler().errorDialog(context, "Forbidden topic name (Contains underscore)");
-      }
-      isDoingSomething = false;
-      return;
-    }
-    for (String existingTopic in topic) {
-      if (newTopic == existingTopic) {
-        if (mounted) {
-          await DialogueHandler().errorDialog(context, "Topic already exists!");
-        }
-        isDoingSomething = false;
-        return;
-      }
-    }
-    List<String> lists = prefs.getStringList(currentTopic) ?? [];
-    await prefs.setStringList(newTopic, lists);
-    await prefs.remove(currentTopic);
-    setState(() {
-      topic[index] = newTopic;
-    });
-    await prefs.setStringList(masterKey, topic);
     isDoingSomething = false;
   }
 

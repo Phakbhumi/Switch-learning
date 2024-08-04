@@ -62,7 +62,7 @@ class _DisplayPageState extends State<DisplayPage> {
     return SafeArea(
       child: Scaffold(
         appBar: MainAppBar(widget.mainKey),
-        backgroundColor: Theme.of(context).colorScheme.background,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
