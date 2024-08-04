@@ -32,10 +32,10 @@ class _DisplayPageState extends State<DisplayPage> {
       relevance = prefs.getStringList(relevanceKey) ?? [];
       keyWord = prefs.getStringList(keyWordKey) ?? [];
     });
-    if (keyWord == []) {
+    if (keyWord.isEmpty) {
       await prefs.setStringList(keyWordKey, []);
     }
-    if (relevance == []) {
+    if (relevance.isEmpty) {
       await prefs.setStringList(relevanceKey, []);
     }
   }
@@ -127,7 +127,7 @@ class _DisplayPageState extends State<DisplayPage> {
             relevanceController.text = '';
             String newKeyWord = addedValue[0];
             String newRelevance = addedValue[1];
-            if (newKeyWord == '') {
+            if (newKeyWord.isEmpty) {
               if (context.mounted) {
                 await DialogueHandler().errorDialog(context, "Keyword can't be empty!");
               }
@@ -173,7 +173,7 @@ class _DisplayPageState extends State<DisplayPage> {
       return;
     }
     for (String keyWords in keyWord) {
-      if (newKeyWord == keyWords) {
+      if (newKeyWord == keyWords && keyWords != keyWord[index]) {
         if (mounted) {
           await DialogueHandler().errorDialog(context, "The keyword already exists!");
         }
