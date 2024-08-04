@@ -76,44 +76,11 @@ class HomePageState extends State<HomePage> {
                                   ),
                                 );
                               },
-                              child: Padding(
-                                padding: const EdgeInsets.only(bottom: 10.0),
-                                child: Card(
-                                  color: Theme.of(context).colorScheme.surfaceTint,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(10.0),
-                                    child: Row(
-                                      children: [
-                                        const SizedBox(width: 10),
-                                        const Icon(Icons.info_outline),
-                                        const SizedBox(width: 20),
-                                        Expanded(
-                                          child: Text(
-                                            currentTopic,
-                                            style: const TextStyle(
-                                              fontSize: 18,
-                                            ),
-                                          ),
-                                        ),
-                                        Visibility(
-                                          visible: Provider.of<ThemeProvider>(context).showMisc,
-                                          child: Row(
-                                            children: [
-                                              IconButton(
-                                                icon: const Icon(Icons.edit),
-                                                onPressed: () => editData(index, currentTopic),
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(Icons.delete),
-                                                onPressed: () => deleteData(index, currentTopic),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
+                              child: TopicList(
+                                index: index,
+                                currentTopic: currentTopic,
+                                editData: editData,
+                                deleteData: deleteData,
                               ),
                             ),
                         ],
@@ -183,9 +150,11 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  void editData(int index, String currentTopic) async {
+  void editData(TopicListData info) async {
     if (isDoingSomething == true) return;
     isDoingSomething = true;
+    int index = info.index;
+    String currentTopic = info.currentTopic;
     controller.text = currentTopic;
     String? newTopic = await openDialog("Edit Topic", "Add your topic");
     controller.text = "";
@@ -206,11 +175,13 @@ class HomePageState extends State<HomePage> {
     isDoingSomething = false;
   }
 
-  void deleteData(int index, String currentTopic) async {
+  void deleteData(TopicListData info) async {
     if (isDoingSomething == true) {
       return;
     }
     isDoingSomething = true;
+    int index = info.index;
+    String currentTopic = info.currentTopic;
     bool isDelete = false;
     if (mounted) {
       isDelete = await DialogueHandler().deleteDialog(context, currentTopic) ?? false;
@@ -258,4 +229,76 @@ class HomePageState extends State<HomePage> {
           ],
         ),
       );
+}
+
+class TopicList extends StatelessWidget {
+  const TopicList({
+    super.key,
+    required this.index,
+    required this.currentTopic,
+    required this.editData,
+    required this.deleteData,
+  });
+
+  final int index;
+  final String currentTopic;
+  final ValueSetter<TopicListData> editData;
+  final ValueSetter<TopicListData> deleteData;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10.0),
+      child: Card(
+        color: Theme.of(context).colorScheme.surfaceTint,
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Row(
+            children: [
+              const SizedBox(width: 10),
+              const Icon(Icons.info_outline),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Text(
+                  currentTopic,
+                  style: const TextStyle(
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+              Visibility(
+                visible: Provider.of<ThemeProvider>(context).showMisc,
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () => editData(
+                        TopicListData(index: index, currentTopic: currentTopic),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () => deleteData(
+                        TopicListData(index: index, currentTopic: currentTopic),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class TopicListData {
+  final int index;
+  final String currentTopic;
+
+  const TopicListData({
+    required this.index,
+    required this.currentTopic,
+  });
 }
