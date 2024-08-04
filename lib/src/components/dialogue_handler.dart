@@ -5,7 +5,6 @@ class DialogueHandler {
         context: context,
         builder: (context) => AlertDialog(
           title: Text(errorMessage),
-          backgroundColor: Theme.of(context).colorScheme.surface,
           actions: [
             TextButton(
               onPressed: () {
@@ -21,7 +20,6 @@ class DialogueHandler {
         context: context,
         builder: (context) => AlertDialog(
           title: Text("Are you sure you want to delete $currentTopic?"),
-          backgroundColor: Theme.of(context).colorScheme.surface,
           actions: [
             TextButton(
               onPressed: () {
@@ -39,4 +37,100 @@ class DialogueHandler {
           ],
         ),
       );
+
+  Future<String?> singleOpenDialog(
+    BuildContext context,
+    String title,
+    String hint,
+    String prefix,
+  ) {
+    TextEditingController controller = TextEditingController();
+    controller.text = prefix;
+    return showDialog<String?>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(title),
+            IconButton(
+              onPressed: () {
+                Navigator.of(context).pop(null);
+              },
+              icon: const Icon(Icons.close),
+            ),
+          ],
+        ),
+        content: TextField(
+          decoration: InputDecoration(hintText: hint),
+          controller: controller,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(controller.text);
+            },
+            child: const Text("Submit"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<List<String>?> doubleOpenDialog(
+    BuildContext context,
+    String title,
+    String firstHint,
+    String firstPrefix,
+    String secondHint,
+    String secondPrefix,
+  ) {
+    TextEditingController firstController = TextEditingController();
+    TextEditingController secondController = TextEditingController();
+    firstController.text = firstPrefix;
+    secondController.text = secondPrefix;
+    return showDialog<List<String>>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(title),
+            IconButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              icon: const Icon(Icons.close),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              decoration: InputDecoration(hintText: firstHint),
+              controller: firstController,
+            ),
+            const SizedBox(height: 40),
+            TextField(
+              decoration: InputDecoration(hintText: secondHint),
+              controller: secondController,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop([
+                firstController.text,
+                secondController.text,
+              ]);
+            },
+            child: const Text("Submit"),
+          ),
+        ],
+      ),
+    );
+  }
 }

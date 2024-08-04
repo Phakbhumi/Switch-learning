@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:switch_learning/src/components/appbar.dart';
 import 'package:switch_learning/src/components/missing_data.dart';
 import 'package:switch_learning/src/components/dialogue_handler.dart';
+import 'package:switch_learning/src/learn.dart';
 import 'package:switch_learning/src/theme/theme.dart';
 import 'package:switch_learning/src/theme/theme_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,8 +22,8 @@ class _DisplayPageState extends State<DisplayPage> {
   List<String> relevance = [];
   late String keyWordKey;
   late String relevanceKey;
-  late TextEditingController keyController;
-  late TextEditingController relevanceController;
+  String keyPrefix = "";
+  String relevancePrefix = "";
   late SharedPreferences prefs;
   bool isDoingSomething = false;
 
@@ -46,20 +47,17 @@ class _DisplayPageState extends State<DisplayPage> {
     keyWordKey = "${widget.mainKey}_1";
     relevanceKey = "${widget.mainKey}_2";
     initVal();
-    keyController = TextEditingController();
-    relevanceController = TextEditingController();
   }
 
   @override
   void dispose() {
-    keyController.dispose();
-    relevanceController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      top: false,
       child: Scaffold(
         appBar: MainAppBar(widget.mainKey),
         backgroundColor: Theme.of(context).colorScheme.background,
@@ -113,45 +111,105 @@ class _DisplayPageState extends State<DisplayPage> {
                       )
                     : const MissingData("It seems like there is nothing in this topic"),
               ),
+              Visibility(
+                visible: Provider.of<ThemeProvider>(context).showMisc,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (isDoingSomething == true) return;
+                        isDoingSomething = true;
+                        List<String> newPrefix = await DialogueHandler().doubleOpenDialog(
+                              context,
+                              "Set prefix",
+                              "Keyword prefix",
+                              keyPrefix,
+                              "Relevance prefix",
+                              relevancePrefix,
+                            ) ??
+                            [keyPrefix, relevancePrefix];
+                        keyPrefix = newPrefix[0];
+                        relevancePrefix = newPrefix[1];
+                        isDoingSomething = false;
+                      },
+                      child: const Text("Set prefix"),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 50),
             ],
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            if (isDoingSomething == true) return;
-            isDoingSomething = true;
-            relevanceController.text = widget.prefix;
-            final List<String> addedValue = await openDialog("Add keyword") ?? ['', ''];
-            keyController.text = '';
-            relevanceController.text = '';
-            String newKeyWord = addedValue[0];
-            String newRelevance = addedValue[1];
-            if (newKeyWord.isEmpty) {
-              if (context.mounted) {
-                await DialogueHandler().errorDialog(context, "Keyword can't be empty!");
-              }
-              isDoingSomething = false;
-              return;
-            }
-            for (String keyWords in keyWord) {
-              if (newKeyWord == keyWords) {
-                if (context.mounted) {
-                  await DialogueHandler().errorDialog(context, "The keyword already exists!");
+        floatingActionButton: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            if (keyWord.isNotEmpty)
+              FloatingActionButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => LearningModeWidget(
+                        title: widget.mainKey,
+                        keywordList: keyWord,
+                        relevanceList: relevance,
+                      ),
+                    ),
+                  );
+                },
+                heroTag: null,
+                child: const Icon(Icons.menu_book),
+              ),
+            if (keyWord.isNotEmpty) const SizedBox(height: 24),
+            FloatingActionButton(
+              onPressed: () async {
+                if (isDoingSomething == true) return;
+                isDoingSomething = true;
+                final List<String?> addedValue = await DialogueHandler().doubleOpenDialog(
+                      context,
+                      "Add keyword",
+                      "Enter the keyword",
+                      keyPrefix,
+                      "Enter the data",
+                      relevancePrefix,
+                    ) ??
+                    [null, null];
+                String? newKeyWord = addedValue[0];
+                String? newRelevance = addedValue[1];
+                if (newKeyWord == null || newRelevance == null) {
+                  isDoingSomething = false;
+                  return;
                 }
+                if (newKeyWord.isEmpty) {
+                  if (context.mounted) {
+                    await DialogueHandler().errorDialog(context, "Keyword can't be empty!");
+                  }
+                  isDoingSomething = false;
+                  return;
+                }
+                for (String keyWords in keyWord) {
+                  if (newKeyWord == keyWords) {
+                    if (context.mounted) {
+                      await DialogueHandler().errorDialog(context, "The keyword already exists!");
+                    }
+                    isDoingSomething = false;
+                    return;
+                  }
+                }
+                setState(() {
+                  keyWord.insert(keyWord.length, newKeyWord);
+                  relevance.insert(relevance.length, newRelevance);
+                });
+                await prefs.setStringList(keyWordKey, keyWord);
+                await prefs.setStringList(relevanceKey, relevance);
                 isDoingSomething = false;
-                return;
-              }
-            }
-            setState(() {
-              keyWord.insert(keyWord.length, newKeyWord);
-              relevance.insert(relevance.length, newRelevance);
-            });
-            await prefs.setStringList(keyWordKey, keyWord);
-            await prefs.setStringList(relevanceKey, relevance);
-            isDoingSomething = false;
-          },
-          child: const Icon(Icons.add),
+              },
+              heroTag: null,
+              child: const Icon(Icons.add),
+            ),
+          ],
         ),
       ),
     );
@@ -160,11 +218,21 @@ class _DisplayPageState extends State<DisplayPage> {
   void editData(int index) async {
     if (isDoingSomething == true) return;
     isDoingSomething = true;
-    keyController.text = keyWord[index];
-    relevanceController.text = relevance[index];
-    final List<String> editedValue = await openDialog("Edit keyword") ?? ['', ''];
-    String newKeyWord = editedValue[0];
-    String newRelevance = editedValue[1];
+    final List<String?> editedValue = await DialogueHandler().doubleOpenDialog(
+          context,
+          "Edit keyword",
+          "Enter the keyword",
+          keyWord[index],
+          "Enter the data",
+          relevance[index],
+        ) ??
+        [null, null];
+    String? newKeyWord = editedValue[0];
+    String? newRelevance = editedValue[1];
+    if (newKeyWord == null || newRelevance == null) {
+      isDoingSomething = false;
+      return;
+    }
     if (newKeyWord == '') {
       if (mounted) {
         await DialogueHandler().errorDialog(context, "Keyword can't be empty!");
@@ -218,46 +286,4 @@ class _DisplayPageState extends State<DisplayPage> {
       return "$newIndex. ${relevance[index]} - ${keyWord[index]}";
     }
   }
-
-  Future<List<String>?> openDialog(String title) => showDialog<List<String>>(
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: Theme.of(context).colorScheme.background,
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(title),
-              IconButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                decoration: const InputDecoration(hintText: "Enter the keyword"),
-                controller: keyController,
-              ),
-              const SizedBox(height: 40),
-              TextField(
-                decoration: const InputDecoration(hintText: "Enter the data"),
-                controller: relevanceController,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop([keyController.text, relevanceController.text]);
-              },
-              child: const Text("Submit"),
-            ),
-          ],
-        ),
-      );
 }

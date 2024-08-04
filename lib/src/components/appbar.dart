@@ -5,6 +5,7 @@ import 'package:switch_learning/src/theme/theme_provider.dart';
 
 class MainAppBar extends StatefulWidget implements PreferredSizeWidget {
   const MainAppBar(this.title, {super.key});
+
   final String title;
 
   @override

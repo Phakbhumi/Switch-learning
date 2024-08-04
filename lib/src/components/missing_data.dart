@@ -10,15 +10,25 @@ class MissingData extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const Icon(
-          Icons.add,
+          Icons.sentiment_neutral,
           size: 60,
         ),
         const SizedBox(height: 40),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 20,
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(width: 30),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 20,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(width: 30),
+          ],
         ),
       ],
     );

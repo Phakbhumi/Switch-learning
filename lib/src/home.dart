@@ -18,7 +18,6 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage> {
   String masterKey = "Master123456";
   List<String> topic = [];
-  late TextEditingController controller;
   late SharedPreferences prefs;
   String prefix = "";
   bool isDoingSomething = false;
@@ -37,115 +36,126 @@ class HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     initVal();
-    controller = TextEditingController();
   }
 
   @override
   void dispose() {
-    controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const MainAppBar("Home"),
-      backgroundColor: Theme.of(context).colorScheme.background,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.only(
-            left: 20.0,
-            right: 20.0,
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              const SizedBox(height: 40),
-              Expanded(
-                child: topic.isNotEmpty
-                    ? ReorderableListView(
-                        children: <Widget>[
-                          for (final (index, currentTopic) in topic.indexed)
-                            InkWell(
-                              key: ValueKey(index),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => DisplayPage(currentTopic, prefix),
-                                  ),
-                                );
-                              },
-                              child: TopicList(
-                                index: index,
-                                currentTopic: currentTopic,
-                                editData: editData,
-                                deleteData: deleteData,
+    return SafeArea(
+      top: false,
+      child: Scaffold(
+        appBar: const MainAppBar("Home"),
+        backgroundColor: Theme.of(context).colorScheme.background,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.only(
+              left: 20.0,
+              right: 20.0,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                const SizedBox(height: 40),
+                Expanded(
+                  child: topic.isNotEmpty
+                      ? ReorderableListView(
+                          children: <Widget>[
+                            for (final (index, currentTopic) in topic.indexed)
+                              InkWell(
+                                key: ValueKey(index),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => DisplayPage(currentTopic, prefix),
+                                    ),
+                                  );
+                                },
+                                child: TopicList(
+                                  index: index,
+                                  currentTopic: currentTopic,
+                                  editData: editData,
+                                  deleteData: deleteData,
+                                ),
                               ),
-                            ),
-                        ],
-                        onReorder: (oldIndex, newIndex) async {
-                          if (oldIndex < newIndex) {
-                            newIndex -= 1;
-                          }
-                          setState(() {
-                            final name = topic.removeAt(oldIndex);
-                            topic.insert(newIndex, name);
-                          });
-                          await prefs.setStringList(masterKey, topic);
-                        },
-                      )
-                    : const MissingData("There is no topic in the moment"),
-              ),
-              Visibility(
-                visible: Provider.of<ThemeProvider>(context).showMisc,
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () async {
-                        if (isDoingSomething == true) return;
-                        isDoingSomething = true;
-                        String newPrefix = await openDialog("Change prefix", "Add your prefix") ?? prefix;
-                        prefix = newPrefix;
-                        isDoingSomething = false;
-                      },
-                      child: const Text("Set prefix"),
-                    ),
-                  ],
+                          ],
+                          onReorder: (oldIndex, newIndex) async {
+                            if (oldIndex < newIndex) {
+                              newIndex -= 1;
+                            }
+                            setState(() {
+                              final name = topic.removeAt(oldIndex);
+                              topic.insert(newIndex, name);
+                            });
+                            await prefs.setStringList(masterKey, topic);
+                          },
+                        )
+                      : const MissingData("There is no topic in the moment"),
                 ),
-              ),
-              const SizedBox(height: 50),
-            ],
+                Visibility(
+                  visible: Provider.of<ThemeProvider>(context).showMisc,
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (isDoingSomething == true) return;
+                          isDoingSomething = true;
+                          String newPrefix = await DialogueHandler().singleOpenDialog(
+                                context,
+                                "Change prefix",
+                                "Add your prefix",
+                                prefix,
+                              ) ??
+                              prefix;
+                          prefix = newPrefix;
+                          isDoingSomething = false;
+                        },
+                        child: const Text("Set prefix"),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 50),
+              ],
+            ),
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          if (isDoingSomething == true) return;
-          isDoingSomething = true;
-          final String? addedTopic = await openDialog("Add topic", "Add your topic");
-          controller.text = "";
-          if (addedTopic == null) {
-            isDoingSomething = false;
-            return;
-          }
-          ValidationResult shouldAdd = await Validator().shouldModifyTopic(addedTopic, masterKey, topic);
-          if (shouldAdd.verdict == false) {
-            if (context.mounted) {
-              await DialogueHandler().errorDialog(context, shouldAdd.errorMessage);
+        floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            if (isDoingSomething == true) return;
+            isDoingSomething = true;
+            final String? addedTopic = await DialogueHandler().singleOpenDialog(
+              context,
+              "Add topic",
+              "Add your topic",
+              prefix,
+            );
+            if (addedTopic == null) {
+              isDoingSomething = false;
+              return;
             }
-          } else {
-            await prefs.setStringList("${addedTopic}_1", []);
-            await prefs.setStringList("${addedTopic}_2", []);
-            setState(() {
-              topic.insert(topic.length, addedTopic);
-            });
-            await prefs.setStringList(masterKey, topic);
-          }
-          isDoingSomething = false;
-        },
-        child: const Icon(Icons.add),
+            ValidationResult shouldAdd = await Validator().shouldModifyTopic(addedTopic, masterKey, topic);
+            if (shouldAdd.verdict == false) {
+              if (context.mounted) {
+                await DialogueHandler().errorDialog(context, shouldAdd.errorMessage);
+              }
+            } else {
+              await prefs.setStringList("${addedTopic}_1", []);
+              await prefs.setStringList("${addedTopic}_2", []);
+              setState(() {
+                topic.insert(topic.length, addedTopic);
+              });
+              await prefs.setStringList(masterKey, topic);
+            }
+            isDoingSomething = false;
+          },
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }
@@ -155,12 +165,10 @@ class HomePageState extends State<HomePage> {
     isDoingSomething = true;
     int index = info.index;
     String currentTopic = info.currentTopic;
-    controller.text = currentTopic;
-    String? newTopic = await openDialog("Edit Topic", "Add your topic");
-    controller.text = "";
+    String? newTopic = await DialogueHandler().singleOpenDialog(context, "Edit Topic", "Add your topic", currentTopic);
     ValidationResult shouldModify = await Validator().shouldModifyTopic(newTopic, masterKey, topic);
     if (shouldModify.verdict == false) {
-      if (mounted) {
+      if (mounted && newTopic != null) {
         await DialogueHandler().errorDialog(context, shouldModify.errorMessage);
       }
     } else {
@@ -198,37 +206,6 @@ class HomePageState extends State<HomePage> {
     await prefs.setStringList(masterKey, topic);
     isDoingSomething = false;
   }
-
-  Future<String?> openDialog(String title, String hint) => showDialog<String>(
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(title),
-              IconButton(
-                onPressed: () {
-                  Navigator.of(context).pop(null);
-                },
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
-          content: TextField(
-            decoration: InputDecoration(hintText: hint),
-            controller: controller,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(controller.text);
-              },
-              child: const Text("Submit"),
-            ),
-          ],
-        ),
-      );
 }
 
 class TopicList extends StatelessWidget {
@@ -254,8 +231,10 @@ class TopicList extends StatelessWidget {
           padding: const EdgeInsets.all(10.0),
           child: Row(
             children: [
-              const SizedBox(width: 10),
-              const Icon(Icons.info_outline),
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.info_outline),
+              ),
               const SizedBox(width: 20),
               Expanded(
                 child: Text(
