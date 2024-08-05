@@ -127,6 +127,8 @@ class _DisplayPageState extends State<DisplayPage> {
                               keyPrefix,
                               "Relevance prefix",
                               relevancePrefix,
+                              false,
+                              [],
                             ) ??
                             [keyPrefix, relevancePrefix];
                         keyPrefix = newPrefix[0];
@@ -174,6 +176,8 @@ class _DisplayPageState extends State<DisplayPage> {
                       keyPrefix,
                       "Enter the data",
                       relevancePrefix,
+                      true,
+                      keyWord,
                     ) ??
                     [null, null];
                 String? newKeyWord = addedValue[0];
@@ -225,6 +229,8 @@ class _DisplayPageState extends State<DisplayPage> {
           keyWord[index],
           "Enter the data",
           relevance[index],
+          true,
+          keyWord,
         ) ??
         [null, null];
     String? newKeyWord = editedValue[0];

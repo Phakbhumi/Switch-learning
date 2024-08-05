@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'selector.dart';
 
 class DialogueHandler {
   Future<void> errorDialog(BuildContext context, String errorMessage) => showDialog(
@@ -84,6 +85,8 @@ class DialogueHandler {
     String firstPrefix,
     String secondHint,
     String secondPrefix,
+    bool isPopUp,
+    List<String> keyWordList,
   ) {
     TextEditingController firstController = TextEditingController();
     TextEditingController secondController = TextEditingController();
@@ -108,11 +111,27 @@ class DialogueHandler {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (isPopUp)
+              Selector(
+                itemList: keyWordList,
+                onPressed: (String select) {
+                  firstController.text = select;
+                },
+              ),
+            if (isPopUp) const SizedBox(height: 8),
             TextField(
               decoration: InputDecoration(hintText: firstHint),
               controller: firstController,
             ),
             const SizedBox(height: 40),
+            if (isPopUp)
+              Selector(
+                itemList: keyWordList,
+                onPressed: (String select) {
+                  secondController.text = select;
+                },
+              ),
+            if (isPopUp) const SizedBox(height: 8),
             TextField(
               decoration: InputDecoration(hintText: secondHint),
               controller: secondController,
