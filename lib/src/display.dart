@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:switch_learning/src/components/appbar.dart';
-import 'package:switch_learning/src/components/missing_data.dart';
-import 'package:switch_learning/src/components/dialogue_handler.dart';
-import 'package:switch_learning/src/learn.dart';
-import 'package:switch_learning/src/theme/theme.dart';
-import 'package:switch_learning/src/theme/theme_provider.dart';
+import 'components/appbar.dart';
+import 'components/display_block.dart';
+import 'components/missing_data.dart';
+import 'components/dialogue_handler.dart';
+import 'learn.dart';
+import 'theme/theme.dart';
+import 'theme/theme_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DisplayPage extends StatefulWidget {
@@ -71,24 +72,15 @@ class _DisplayPageState extends State<DisplayPage> {
                     ? ReorderableListView(
                         children: <Widget>[
                           for (var index = 0; index < keyWord.length; index++)
-                            ListTile(
+                            InkWell(
                               key: ValueKey(index),
-                              title: Text(textDisplay(index)),
-                              trailing: Visibility(
-                                visible: Provider.of<ThemeProvider>(context).showMisc,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      onPressed: () => editData(index),
-                                      icon: const Icon(Icons.edit),
-                                    ),
-                                    IconButton(
-                                      onPressed: () => deleteData(index),
-                                      icon: const Icon(Icons.delete),
-                                    ),
-                                  ],
-                                ),
+                              onTap: () {},
+                              child: DisplayBlock(
+                                key: ValueKey(index),
+                                title: textDisplay(index),
+                                index: index,
+                                editData: editData,
+                                deleteData: deleteData,
                               ),
                             ),
                         ],
@@ -222,46 +214,46 @@ class _DisplayPageState extends State<DisplayPage> {
   void editData(int index) async {
     if (isDoingSomething == true) return;
     isDoingSomething = true;
-    final List<String?> editedValue = await DialogueHandler().doubleOpenDialog(
-          context,
-          "Edit keyword",
-          "Enter the keyword",
-          keyWord[index],
-          "Enter the data",
-          relevance[index],
-          true,
-          keyWord,
-        ) ??
-        [null, null];
-    String? newKeyWord = editedValue[0];
-    String? newRelevance = editedValue[1];
-    if (newKeyWord == null || newRelevance == null) {
-      isDoingSomething = false;
-      return;
-    }
-    if (newKeyWord == '') {
-      if (mounted) {
-        await DialogueHandler().errorDialog(context, "Keyword can't be empty!");
-      }
-      isDoingSomething = false;
-      return;
-    }
-    for (String keyWords in keyWord) {
-      if (newKeyWord == keyWords && keyWords != keyWord[index]) {
-        if (mounted) {
-          await DialogueHandler().errorDialog(context, "The keyword already exists!");
-        }
-        isDoingSomething = false;
+    try {
+      final List<String?> editedValue = await DialogueHandler().doubleOpenDialog(
+            context,
+            "Edit keyword",
+            "Enter the keyword",
+            keyWord[index],
+            "Enter the data",
+            relevance[index],
+            true,
+            keyWord,
+          ) ??
+          [null, null];
+      String? newKeyWord = editedValue[0];
+      String? newRelevance = editedValue[1];
+      if (newKeyWord == null || newRelevance == null) {
         return;
       }
+      if (newKeyWord == '') {
+        if (mounted) {
+          await DialogueHandler().errorDialog(context, "Keyword can't be empty!");
+        }
+        return;
+      }
+      for (String keyWords in keyWord) {
+        if (newKeyWord == keyWords && keyWords != keyWord[index]) {
+          if (mounted) {
+            await DialogueHandler().errorDialog(context, "The keyword already exists!");
+          }
+          return;
+        }
+      }
+      setState(() {
+        keyWord[index] = newKeyWord;
+        relevance[index] = newRelevance;
+      });
+      await prefs.setStringList(keyWordKey, keyWord);
+      await prefs.setStringList(relevanceKey, relevance);
+    } finally {
+      isDoingSomething = true;
     }
-    setState(() {
-      keyWord[index] = newKeyWord;
-      relevance[index] = newRelevance;
-    });
-    await prefs.setStringList(keyWordKey, keyWord);
-    await prefs.setStringList(relevanceKey, relevance);
-    isDoingSomething = false;
   }
 
   void deleteData(int index) async {

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:switch_learning/src/components/dialogue_handler.dart';
-import 'package:switch_learning/src/data/topic_provider.dart';
-import 'package:switch_learning/src/data/validator.dart';
-import 'package:switch_learning/src/theme/theme_provider.dart';
-import 'package:switch_learning/src/components/appbar.dart';
-import 'package:switch_learning/src/components/missing_data.dart';
-import 'package:switch_learning/src/display.dart';
+import 'components/dialogue_handler.dart';
+import 'components/home_block.dart';
+import 'data/topic_provider.dart';
+import 'data/validator.dart';
+import 'theme/theme_provider.dart';
+import 'components/appbar.dart';
+import 'components/missing_data.dart';
+import 'display.dart';
+import 'data/keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,7 +19,6 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
-  String masterKey = "Master123456";
   List<String> topic = [];
   late SharedPreferences prefs;
   String prefix = "";
@@ -26,7 +27,7 @@ class HomePageState extends State<HomePage> {
   Future<void> initVal() async {
     prefs = await SharedPreferences.getInstance();
     setState(() {
-      topic = prefs.getStringList(masterKey) ?? [];
+      topic = prefs.getStringList(Keys.masterKey) ?? [];
     });
     for (String key in topic) {
       if (mounted) {
@@ -34,7 +35,7 @@ class HomePageState extends State<HomePage> {
       }
     }
     if (topic == []) {
-      await prefs.setStringList(masterKey, []);
+      await prefs.setStringList(Keys.masterKey, []);
     }
   }
 
@@ -81,7 +82,7 @@ class HomePageState extends State<HomePage> {
                                     ),
                                   );
                                 },
-                                child: TopicList(
+                                child: HomeBlock(
                                   index: index,
                                   currentTopic: currentTopic,
                                   editData: editData,
@@ -97,7 +98,7 @@ class HomePageState extends State<HomePage> {
                               final name = topic.removeAt(oldIndex);
                               topic.insert(newIndex, name);
                             });
-                            await prefs.setStringList(masterKey, topic);
+                            await prefs.setStringList(Keys.masterKey, topic);
                           },
                         )
                       : const MissingData("There is no topic in the moment"),
@@ -147,7 +148,7 @@ class HomePageState extends State<HomePage> {
             }
             ValidationResult shouldAdd = ValidationResult(false, "Context isn't mounted");
             if (context.mounted) {
-              shouldAdd = await Validator().shouldModifyTopic(context, addedTopic, masterKey);
+              shouldAdd = await Validator().shouldModifyTopic(context, addedTopic, Keys.masterKey);
             }
             if (shouldAdd.verdict == false) {
               if (context.mounted) {
@@ -162,7 +163,7 @@ class HomePageState extends State<HomePage> {
               if (context.mounted) {
                 Provider.of<TopicProvider>(context, listen: false).addTopic(addedTopic);
               }
-              await prefs.setStringList(masterKey, topic);
+              await prefs.setStringList(Keys.masterKey, topic);
             }
             isDoingSomething = false;
           },
@@ -172,7 +173,7 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  void editData(TopicListData info) async {
+  void editData(TopicData info) async {
     if (isDoingSomething == true) return;
     isDoingSomething = true;
     int index = info.index;
@@ -180,7 +181,7 @@ class HomePageState extends State<HomePage> {
     String? newTopic = await DialogueHandler().singleOpenDialog(context, "Edit Topic", "Add your topic", currentTopic);
     ValidationResult shouldModify = ValidationResult(false, "Context isn't mounted");
     if (mounted) {
-      shouldModify = await Validator().shouldModifyTopic(context, newTopic, masterKey);
+      shouldModify = await Validator().shouldModifyTopic(context, newTopic, Keys.masterKey);
     }
     if (shouldModify.verdict == false) {
       if (mounted && newTopic != null) {
@@ -197,12 +198,12 @@ class HomePageState extends State<HomePage> {
         Provider.of<TopicProvider>(context, listen: false).removeTopic(currentTopic);
         Provider.of<TopicProvider>(context, listen: false).addTopic(newTopic);
       }
-      await prefs.setStringList(masterKey, topic);
+      await prefs.setStringList(Keys.masterKey, topic);
     }
     isDoingSomething = false;
   }
 
-  void deleteData(TopicListData info) async {
+  void deleteData(TopicData info) async {
     if (isDoingSomething == true) {
       return;
     }
@@ -225,80 +226,7 @@ class HomePageState extends State<HomePage> {
     if (mounted) {
       Provider.of<TopicProvider>(context, listen: false).removeTopic(currentTopic);
     }
-    await prefs.setStringList(masterKey, topic);
+    await prefs.setStringList(Keys.masterKey, topic);
     isDoingSomething = false;
   }
-}
-
-class TopicList extends StatelessWidget {
-  const TopicList({
-    super.key,
-    required this.index,
-    required this.currentTopic,
-    required this.editData,
-    required this.deleteData,
-  });
-
-  final int index;
-  final String currentTopic;
-  final ValueSetter<TopicListData> editData;
-  final ValueSetter<TopicListData> deleteData;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10.0),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Row(
-            children: [
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.info_outline),
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Text(
-                  currentTopic,
-                  style: const TextStyle(
-                    fontSize: 18,
-                  ),
-                ),
-              ),
-              Visibility(
-                visible: Provider.of<ThemeProvider>(context).showMisc,
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () => editData(
-                        TopicListData(index: index, currentTopic: currentTopic),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () => deleteData(
-                        TopicListData(index: index, currentTopic: currentTopic),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class TopicListData {
-  final int index;
-  final String currentTopic;
-
-  const TopicListData({
-    required this.index,
-    required this.currentTopic,
-  });
 }
