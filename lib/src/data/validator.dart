@@ -1,5 +1,9 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:switch_learning/src/data/topic_provider.dart';
+
 class Validator {
-  Future<ValidationResult> shouldModifyTopic(String? addedTopic, String masterKey, List<String> topic) async {
+  Future<ValidationResult> shouldModifyTopic(BuildContext context, String? addedTopic, String masterKey) async {
     if (addedTopic == null) {
       return ValidationResult(false, "Topic shouldn't be null");
     }
@@ -12,7 +16,7 @@ class Validator {
     if (addedTopic.contains('_')) {
       return ValidationResult(false, "Forbidden topic name (Contains underscore)");
     }
-    if (topic.contains(addedTopic)) {
+    if (Provider.of<TopicProvider>(context, listen: false).isInTopicList(addedTopic)) {
       return ValidationResult(false, "Topic already exists!");
     }
     return ValidationResult(true, "");

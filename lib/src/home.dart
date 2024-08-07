@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:switch_learning/src/components/dialogue_handler.dart';
+import 'package:switch_learning/src/data/topic_provider.dart';
 import 'package:switch_learning/src/data/validator.dart';
 import 'package:switch_learning/src/theme/theme_provider.dart';
 import 'package:switch_learning/src/components/appbar.dart';
@@ -27,6 +28,11 @@ class HomePageState extends State<HomePage> {
     setState(() {
       topic = prefs.getStringList(masterKey) ?? [];
     });
+    for (String key in topic) {
+      if (mounted) {
+        Provider.of<TopicProvider>(context, listen: false).addTopic(key);
+      }
+    }
     if (topic == []) {
       await prefs.setStringList(masterKey, []);
     }
@@ -139,7 +145,10 @@ class HomePageState extends State<HomePage> {
               isDoingSomething = false;
               return;
             }
-            ValidationResult shouldAdd = await Validator().shouldModifyTopic(addedTopic, masterKey, topic);
+            ValidationResult shouldAdd = ValidationResult(false, "Context isn't mounted");
+            if (context.mounted) {
+              shouldAdd = await Validator().shouldModifyTopic(context, addedTopic, masterKey);
+            }
             if (shouldAdd.verdict == false) {
               if (context.mounted) {
                 await DialogueHandler().errorDialog(context, shouldAdd.errorMessage);
@@ -150,6 +159,9 @@ class HomePageState extends State<HomePage> {
               setState(() {
                 topic.insert(topic.length, addedTopic);
               });
+              if (context.mounted) {
+                Provider.of<TopicProvider>(context, listen: false).addTopic(addedTopic);
+              }
               await prefs.setStringList(masterKey, topic);
             }
             isDoingSomething = false;
@@ -166,7 +178,10 @@ class HomePageState extends State<HomePage> {
     int index = info.index;
     String currentTopic = info.currentTopic;
     String? newTopic = await DialogueHandler().singleOpenDialog(context, "Edit Topic", "Add your topic", currentTopic);
-    ValidationResult shouldModify = await Validator().shouldModifyTopic(newTopic, masterKey, topic);
+    ValidationResult shouldModify = ValidationResult(false, "Context isn't mounted");
+    if (mounted) {
+      shouldModify = await Validator().shouldModifyTopic(context, newTopic, masterKey);
+    }
     if (shouldModify.verdict == false) {
       if (mounted && newTopic != null) {
         await DialogueHandler().errorDialog(context, shouldModify.errorMessage);
@@ -178,6 +193,10 @@ class HomePageState extends State<HomePage> {
       setState(() {
         topic[index] = newTopic;
       });
+      if (mounted) {
+        Provider.of<TopicProvider>(context, listen: false).removeTopic(currentTopic);
+        Provider.of<TopicProvider>(context, listen: false).addTopic(newTopic);
+      }
       await prefs.setStringList(masterKey, topic);
     }
     isDoingSomething = false;

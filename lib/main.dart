@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:switch_learning/src/data/topic_provider.dart';
 import 'src/home.dart';
 import 'src/theme/theme_provider.dart';
 
@@ -9,6 +10,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => TopicProvider()),
       ],
       child: const MyApp(),
     ),
