@@ -222,6 +222,9 @@ class HomePageState extends State<HomePage> {
     setState(() {
       topic.removeAt(index);
     });
+    if (mounted) {
+      Provider.of<TopicProvider>(context, listen: false).removeTopic(currentTopic);
+    }
     await prefs.setStringList(masterKey, topic);
     isDoingSomething = false;
   }
