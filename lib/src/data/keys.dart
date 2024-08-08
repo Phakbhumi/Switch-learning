@@ -1,4 +1,3 @@
 class Keys {
-  static String masterKey = "Master123456";
-  static String secondaryKey = "Secondary4321";
+  static String masterKey = "Master_123456";
 }
